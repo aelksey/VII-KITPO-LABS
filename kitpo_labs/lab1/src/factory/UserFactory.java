@@ -15,6 +15,8 @@ public class UserFactory {
         // Для добавления нового ТД — просто допишите сюда его экземпляр!
         builders.add(new Point2DStrategy());
         builders.add(new IntegerStrategy());
+        builders.add(new DoubleStrategy());
+        builders.add(new StringStrategy());
     }
 
     public static List<String> getTypeNameList() {
