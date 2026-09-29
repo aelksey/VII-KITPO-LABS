@@ -1,0 +1,46 @@
+@startuml
+skinparam linetype ortho
+title Диаграмма 1 — Базовая структура данных
+
+class CustomList {
+  -head: Node<T>
+  -tail: Node<T>
+  -size: int
+  -nodeCount: int
+  -blockCapacity: int
+  --
+  +add(data: T)
+  +insert(index: int, data: T)
+  +get(index: int): T
+  +remove(index: int)
+  +forEach(callback)
+  +firstThat(predicate): T
+  +firstIndexThat(predicate, traversal): int
+  +sort(strategy, comparator)
+  +setBlockCapacity(capacity: int)
+  +getBlocks(): List<List<T>>
+}
+
+class Node {
+  -values: E
+  -used: int
+  -next: Node<E>
+}
+
+interface TraverseStrategyInterface
+interface SortStrategyInterface
+interface UserTypeInterface
+interface ForEachCallbackInterface
+
+CustomList *-- "0..*" Node
+Node --> "0..1 next" Node
+
+CustomList ..> TraverseStrategyInterface
+CustomList ..> SortStrategyInterface
+CustomList ..> UserTypeInterface
+CustomList ..> ForEachCallbackInterface
+
+TraverseStrategyInterface ..> CustomList
+TraverseStrategyInterface ..> ForEachCallbackInterface
+SortStrategyInterface ..> UserTypeInterface
+@enduml

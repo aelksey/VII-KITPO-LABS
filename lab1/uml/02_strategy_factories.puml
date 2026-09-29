@@ -1,0 +1,43 @@
+@startuml
+skinparam linetype ortho
+title Диаграмма 2 — Фабрики стратегий
+
+class SerializeFactory {
+  --
+  +{static} getFormatNameList(): List<String>
+  +{static} getStrategyByName(name: String): SerializeStrategyInterface
+}
+
+class SortFactory {
+  --
+  +{static} getStrategyNameList(): List<String>
+  +{static} getStrategyByName(name: String): SortStrategyInterface
+}
+
+class TraverseFactory {
+  --
+  +{static} getStrategyNameList(): List<String>
+  +{static} getStrategyByName(name: String): TraverseStrategyInterface<T>
+}
+
+class UserFactory {
+  --
+  +{static} getTypeNameList(): List<String>
+  +{static} getBuilderByName(name: String): UserTypeInterface<?>
+}
+
+interface SerializeStrategyInterface
+interface SortStrategyInterface
+interface TraverseStrategyInterface
+interface UserTypeInterface
+
+SerializeFactory o-- SerializeStrategyInterface
+SortFactory o-- SortStrategyInterface
+TraverseFactory o-- TraverseStrategyInterface
+UserFactory o-- UserTypeInterface
+
+SerializeStrategyInterface o--[hidden] SortFactory
+TraverseStrategyInterface o--[hidden] UserFactory
+
+
+@enduml
