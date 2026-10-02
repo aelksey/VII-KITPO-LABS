@@ -1,14 +1,14 @@
 package inface
 
-import java.util.{ArrayList, Comparator}
+import core.CustomList
+import java.util.Comparator
 
 trait SortStrategyInterface {
   def strategyName(): String
   
-  // Базовый метод сортировки, принимающий стандартный Java Comparator
-  def sort[T](list: ArrayList[T], comparator: Comparator[_ >: T]): Unit
+  // Принимаем CustomList вместо ArrayList для реализации inplace-сортировки
+  def sort[T](list: CustomList[T], comparator: Comparator[_ >: T]): Unit
   
-  // Метод с реализацией по умолчанию, использующий компаратор из UserTypeInterface
-  def sort[T](list: ArrayList[T], `type`: UserTypeInterface[T]): Unit =
+  def sort[T](list: CustomList[T], `type`: UserTypeInterface[T]): Unit =
     sort(list, `type`.getTypeComparator())
 }

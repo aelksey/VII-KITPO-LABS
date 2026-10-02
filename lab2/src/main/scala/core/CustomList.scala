@@ -12,7 +12,6 @@ import java.util.Objects
 import java.util.function.Predicate
 import scala.jdk.CollectionConverters._
 
-// Список блоков
 class CustomList[T] {
 
   private val DEFAULT_BLOCK_CAPACITY: Int = 3
@@ -22,6 +21,10 @@ class CustomList[T] {
   private var nodeCount: Int = 0
   private var blockCapacity: Int = DEFAULT_BLOCK_CAPACITY
 
+  // Кэш для оптимизации частых обращений к соседним элементам по индексу (сортировка)
+  @transient private var cachedNode: CustomList.Node[T] = null
+  @transient private var cachedBlockIndex: Int = -1
+
   def this(blockCapacity: Int) = {
     this()
     if (blockCapacity < 1) {
@@ -30,33 +33,26 @@ class CustomList[T] {
     this.blockCapacity = blockCapacity
   }
 
-  // Количество объектов, а не узлов
-  def getSize(): Int = {
-    size
+  def getSize(): Int = size
+  def getNodeCount(): Int = nodeCount
+  def getBlockCapacity(): Int = blockCapacity
+
+  private def invalidateCache(): Unit = {
+    cachedNode = null
+    cachedBlockIndex = -1
   }
 
-  def getNodeCount(): Int = {
-    nodeCount
-  }
-
-  def getBlockCapacity(): Int = {
-    blockCapacity
-  }
-
-  // Перегруппировка ссылок; сами объекты и их порядок не меняются
   def setBlockCapacity(capacity: Int): Unit = {
     if (capacity < 1) {
       throw new IllegalArgumentException("Размер массива должен быть положительным")
     }
     if (capacity == blockCapacity) {
-      // Имитируем пустой return
+      // Ничего не делаем
     } else {
       val items = toArrayList()
       clear()
       blockCapacity = capacity
-      items.asScala.foreach { item => {
-        add(item)
-      }}
+      items.asScala.foreach { item => add(item) }
     }
   }
 
@@ -65,9 +61,9 @@ class CustomList[T] {
     tail = null
     size = 0
     nodeCount = 0
+    invalidateCache()
   }
 
-  // Добавление ссылки в последнюю свободную ячейку; при необходимости создаётся узел
   def add(data: T): Unit = {
     if ((tail == null) || (tail.used == blockCapacity)) {
       val node = new CustomList.Node[T](blockCapacity)
@@ -82,16 +78,37 @@ class CustomList[T] {
     tail.values(tail.used) = data
     tail.used = tail.used + 1
     size = size + 1
+    invalidateCache()
   }
 
+  // Оптимизированный blockAt с кэшированием последнего запрошенного узла
   private def blockAt(index: Int): CustomList.Node[T] = {
     Objects.checkIndex(index, size)
-    var node = head
-    var block = index / blockCapacity
-    while (block > 0) {
-      node = node.next
-      block = block - 1
+    val targetBlockIndex = index / blockCapacity
+
+    if (cachedNode != null && cachedBlockIndex == targetBlockIndex) {
+      return cachedNode
     }
+
+    var node: CustomList.Node[T] = null
+    var startBlock = 0
+
+    if (cachedNode != null && targetBlockIndex >= cachedBlockIndex) {
+      node = cachedNode
+      startBlock = cachedBlockIndex
+    } else {
+      node = head
+      startBlock = 0
+    }
+
+    var block = startBlock
+    while (block < targetBlockIndex) {
+      node = node.next
+      block = block + 1
+    }
+
+    cachedNode = node
+    cachedBlockIndex = targetBlockIndex
     node
   }
 
@@ -99,7 +116,25 @@ class CustomList[T] {
     blockAt(index).values(index % blockCapacity)
   }
 
-  // Вставляет ссылку, сдвигая последующие ссылки через границы массивов
+  // Новый метод inplace-модификации значения по физическому индексу
+  def set(index: Int, data: T): Unit = {
+    blockAt(index).values(index % blockCapacity) = data
+  }
+
+  // Новый метод быстрого inplace-обмена двух ячеек за O(1) переходов по кэшу
+  def swap(index1: Int, index2: Int): Unit = {
+    if (index1 == index2) return
+    val node1 = blockAt(index1)
+    val offset1 = index1 % blockCapacity
+    val temp = node1.values(offset1)
+
+    val node2 = blockAt(index2)
+    val offset2 = index2 % blockCapacity
+
+    node1.values(offset1) = node2.values(offset2)
+    node2.values(offset2) = temp
+  }
+
   def insert(index: Int, data: T): Unit = {
     if ((index < 0) || (index > size)) {
       throw new IndexOutOfBoundsException(java.lang.String.valueOf(index))
@@ -128,10 +163,10 @@ class CustomList[T] {
       node.values(offset) = carry
       node.used = node.used + 1
       size = size + 1
+      invalidateCache()
     }
   }
 
-  // Удаляет ссылку и уплотняет последующие массивы
   def remove(index: Int): Unit = {
     var node = blockAt(index)
     var offset = index % blockCapacity
@@ -169,24 +204,13 @@ class CustomList[T] {
       }
     }
     size = size - 1
+    invalidateCache()
   }
 
-  // Перегрузки с выбранным обходом
-  def add(data: T, traversal: TraverseStrategyInterface[T]): Unit = {
-    insert(size, data, traversal)
-  }
-  
-  def get(index: Int, traversal: TraverseStrategyInterface[T]): T = {
-    get(traversal.elementIndex(index, size))
-  }
-  
-  def insert(index: Int, data: T, traversal: TraverseStrategyInterface[T]): Unit = {
-    insert(traversal.insertionIndex(index, size), data)
-  }
-  
-  def remove(index: Int, traversal: TraverseStrategyInterface[T]): Unit = {
-    remove(traversal.elementIndex(index, size))
-  }
+  def add(data: T, traversal: TraverseStrategyInterface[T]): Unit = insert(size, data, traversal)
+  def get(index: Int, traversal: TraverseStrategyInterface[T]): T = get(traversal.elementIndex(index, size))
+  def insert(index: Int, data: T, traversal: TraverseStrategyInterface[T]): Unit = insert(traversal.insertionIndex(index, size), data)
+  def remove(index: Int, traversal: TraverseStrategyInterface[T]): Unit = remove(traversal.elementIndex(index, size))
 
   def forEach(callback: ForEachCallbackInterface[T]): Unit = {
     Objects.requireNonNull(callback)
@@ -199,7 +223,6 @@ class CustomList[T] {
     }
   }
 
-  // Внутренний forEach для совместимости с лямбдами Scala
   def forEach(action: T => Unit): Unit = {
     Objects.requireNonNull(action)
     var node = head
@@ -233,23 +256,19 @@ class CustomList[T] {
 
   def firstThat(predicate: Predicate[_ >: T], traversal: TraverseStrategyInterface[T]): T = {
     val index = firstIndexThat(predicate, traversal)
-    if (index < 0) {
-      null.asInstanceOf[T]
-    } else {
-      get(index, traversal)
-    }
+    if (index < 0) null.asInstanceOf[T] else get(index, traversal)
   }
 
+  // Оптимизированный поиск индекса БЕЗ создания промежуточного ArrayList
   def firstIndexThat(predicate: Predicate[_ >: T], traversal: TraverseStrategyInterface[T]): Int = {
     Objects.requireNonNull(predicate)
     Objects.requireNonNull(traversal)
-    val values = toArrayList()
     var resultIdx = -1
     var found = false
     var i = 0
     
-    while ((i < values.size()) && !found) {
-      if (predicate.test(values.get(traversal.elementIndex(i, values.size())))) {
+    while ((i < size) && !found) {
+      if (predicate.test(get(traversal.elementIndex(i, size)))) {
         resultIdx = i
         found = true
       }
@@ -260,14 +279,13 @@ class CustomList[T] {
 
   def toArrayList(): ArrayList[T] = {
     val result = new ArrayList[T](size)
-    forEach { item => {
+    forEach { item => 
       result.add(item)
       ()
-    }}
+    }
     result
   }
 
-  // Снимок заполненных ячеек каждого узла. Оболочки неизменяемые, объекты те же
   def getBlocks(): List[List[T]] = {
     val blocks = new ArrayList[List[T]](nodeCount)
     var node = head
@@ -286,25 +304,20 @@ class CustomList[T] {
     sort(strategy, `type`.getTypeComparator())
   }
 
-  // O(N log N) + O(N) сборка блоков. Переставляются ссылки, объекты не клонируются
+  // Теперь никакой сборки/разборки через ArrayList! Изменения вносятся inplace.
   def sort(strategy: SortStrategyInterface, comparator: Comparator[_ >: T]): Unit = {
     Objects.requireNonNull(strategy)
     Objects.requireNonNull(comparator)
     if (size <= 1) {
       // Имитируем пустой return
     } else {
-      val items = toArrayList()
-      strategy.sort(items, comparator)
-      clear()
-      items.asScala.foreach { item => {
-        add(item)
-      }}
+      strategy.sort(this, comparator)
+      invalidateCache() // Сбрасываем кэш после хаотичных перемещений при сортировке
     }
   }
 }
 
 object CustomList {
-  // Вложенный статический класс Node
   private final class Node[E](capacity: Int) {
     val values: Array[E] = new Array[AnyRef](capacity).asInstanceOf[Array[E]]
     var used: Int = 0
