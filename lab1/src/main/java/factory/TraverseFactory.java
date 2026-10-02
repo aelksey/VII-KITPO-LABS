@@ -1,18 +1,22 @@
 package factory;
 
 import inface.TraverseStrategyInterface;
+import java.util.List;
 import traverse.LinearTraverseStrategy;
 import traverse.ReverseTraverseStrategy;
 
-// Фабрика для получения стратегий обхода.
+// Фабрика для получения стратегий обхода на Java
 public class TraverseFactory {
 
-    public static java.util.List<String> getStrategyNameList() {
-        return java.util.List.of("Линейный обход", "Обратный обход");
+    public static List<String> getStrategyNameList() {
+        return List.of("Линейный обход", "Обратный обход");
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> TraverseStrategyInterface<T> getStrategyByName(String name) {
-        if (name == null) return null;
+        if (name == null) {
+            return null;
+        }
         
         switch (name.trim()) {
             case "Линейный обход":

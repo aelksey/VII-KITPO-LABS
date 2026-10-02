@@ -17,9 +17,14 @@ public class AlgorithmsPanel extends JPanel {
         button("Обойти", Operation.TRAVERSE, action);
         button("Найти", Operation.FIND, action);
     }
+
     private void button(String label, Operation operation, Consumer<Operation> action) {
         JButton button = new JButton(label);
-        button.addActionListener(e -> action.accept(operation)); add(button);
+        button.addActionListener(e -> action.accept(operation)); 
+        add(button);
     }
-    public SortStrategyInterface sortStrategy() { return SortFactory.getStrategyByName((String) sorts.getSelectedItem()); }
+
+    public SortStrategyInterface sortStrategy() { 
+        return SortFactory.getStrategyByName((String) sorts.getSelectedItem()); 
+    }
 }

@@ -1,22 +1,21 @@
 package sort;
 
 import java.util.ArrayList;
-
+import core.CustomList;
 import inface.SortStrategyInterface;
 import java.util.Comparator;
 
-// Реализация интерфейса SortStrategy (MergeSort)
 public class MergeSortStrategy implements SortStrategyInterface {
     @Override
     public String strategyName() { return "Сортировка слиянием"; }
 
     @Override
-    public <T> void sort(ArrayList<T> list, Comparator<? super T> userType) {
-        if (list == null || list.size() <= 1) return;
-        mergeSort(list, 0, list.size() - 1, userType);
+    public <T> void sort(CustomList<T> list, Comparator<? super T> userType) {
+        if (list == null || list.getSize() <= 1) return;
+        mergeSort(list, 0, list.getSize() - 1, userType);
     }
 
-    private <T> void mergeSort(ArrayList<T> list, int l, int r, Comparator<? super T> userType) {
+    private <T> void mergeSort(CustomList<T> list, int l, int r, Comparator<? super T> userType) {
         if (l < r) {
             int m = l + (r - l) / 2;
             mergeSort(list, l, m, userType);
@@ -25,9 +24,13 @@ public class MergeSortStrategy implements SortStrategyInterface {
         }
     }
 
-    private <T> void merge(ArrayList<T> list, int l, int m, int r, Comparator<? super T> userType) {
-        ArrayList<T> left = new ArrayList<>(list.subList(l, m + 1));
-        ArrayList<T> right = new ArrayList<>(list.subList(m + 1, r + 1));
+    private <T> void merge(CustomList<T> list, int l, int m, int r, Comparator<? super T> userType) {
+        // Выделение памяти под части остается локальным
+        ArrayList<T> left = new ArrayList<>(m - l + 1);
+        ArrayList<T> right = new ArrayList<>(r - m);
+
+        for (int i = l; i <= m; i++) left.add(list.get(i));
+        for (int j = m + 1; j <= r; j++) right.add(list.get(j));
 
         int i = 0, j = 0, k = l;
         while (i < left.size() && j < right.size()) {
@@ -41,4 +44,3 @@ public class MergeSortStrategy implements SortStrategyInterface {
         while (j < right.size()) list.set(k++, right.get(j++));
     }
 }
-

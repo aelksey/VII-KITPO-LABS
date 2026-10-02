@@ -7,7 +7,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
-//Связывает независимые панели управления с типизированным списком
 public class ListEditorPanel<T> extends JPanel {
     private final CustomList<T> list = new CustomList<>();
     private final UserTypeInterface<T> type;
@@ -19,30 +18,53 @@ public class ListEditorPanel<T> extends JPanel {
     private final BlockSettingsPanel blocks;
     private final RandomListPanel random;
 
+    public core.CustomList<T> getList() { 
+        return this.list; 
+    }
+
+    public ListVisualizer<T> getVisualizer() { 
+        return this.visualizer; 
+    }
+
     public ListEditorPanel(UserTypeInterface<T> type, SelectionPanel selection) {
         super(new BorderLayout());
-        this.type = type; this.selection = selection;
+        this.type = type; 
+        this.selection = selection;
+        
         visualizer = new ListVisualizer<>(list, type);
         visualizer.setTraversal(selection.traversal());
-        output.setEditable(false); output.setName("output");
+        output.setEditable(false); 
+        output.setName("output");
+        
         operations = new ListOperationsPanel(operation -> execute(() -> operate(operation)));
         algorithms = new AlgorithmsPanel(operation -> execute(() -> algorithm(operation)));
         blocks = new BlockSettingsPanel(list.getBlockCapacity(), () -> execute(this::regroup));
         random = new RandomListPanel(() -> execute(this::generateRandomList));
+        
         blocks.updateStatus(list.getSize(), list.getNodeCount());
-        try { operations.setValue(type.serializeValue(type.sampleValues().get(0))); }
-        catch (Exception ex) { output.setText(ex.getMessage()); }
+        
+        try { 
+            operations.setValue(type.serializeValue(type.sampleValues().get(0))); 
+        } catch (Exception ex) { 
+            output.setText(ex.getMessage()); 
+        }
+        
         JPanel controls = new JPanel();
         controls.setLayout(new BoxLayout(controls, BoxLayout.Y_AXIS));
-        controls.add(operations); controls.add(algorithms); controls.add(blocks);
+        controls.add(operations); 
+        controls.add(algorithms); 
+        controls.add(blocks);
         controls.add(random);
         controls.add(new SerializationPanel(save -> execute(() -> fileOperation(save))));
+        
         add(controls, BorderLayout.NORTH);
         add(new JScrollPane(visualizer), BorderLayout.CENTER);
         add(new JScrollPane(output), BorderLayout.SOUTH);
     }
 
-    private T parsedClone() { return type.clone(type.parseValue(operations.value())); }
+    private T parsedClone() { 
+        return type.clone(type.parseValue(operations.value())); 
+    }
 
     private void operate(ListOperationsPanel.Operation operation) throws Exception {
         var traversal = selection.<T>traversal();
@@ -50,7 +72,10 @@ public class ListEditorPanel<T> extends JPanel {
             case APPEND -> list.add(parsedClone(), traversal);
             case PREPEND -> list.insert(0, parsedClone(), traversal);
             case INSERT -> list.insert(operations.index(), parsedClone(), traversal);
-            case GET -> { output.setText(type.toString(list.get(operations.index(), traversal))); return; }
+            case GET -> { 
+                output.setText(type.toString(list.get(operations.index(), traversal))); 
+                return; 
+            }
             case REMOVE -> list.remove(operations.index(), traversal);
             case CLEAR -> list.clear();
         }
@@ -58,6 +83,7 @@ public class ListEditorPanel<T> extends JPanel {
     }
 
     private void algorithm(AlgorithmsPanel.Operation operation) {
+        var traversal = selection.<T>traversal();
         switch (operation) {
             case SORT -> {
                 list.sort(algorithms.sortStrategy(), type.getTypeComparator());
@@ -65,12 +91,11 @@ public class ListEditorPanel<T> extends JPanel {
             }
             case TRAVERSE -> {
                 StringBuilder text = new StringBuilder();
-                selection.<T>traversal().traverse(list, v -> text.append(type.toString(v)).append('\n'));
+                traversal.traverse(list, v -> text.append(type.toString(v)).append('\n'));
                 output.setText(text.length() == 0 ? "Список пуст" : text.toString());
             }
             case FIND -> {
                 T sought = parsedClone();
-                var traversal = selection.<T>traversal();
                 int index = list.firstIndexThat(v -> type.getTypeComparator().compare(v, sought) == 0, traversal);
                 output.setText(index == -1 ? "Не найдено" : "Логический номер: " + index
                         + "\nЗначение: " + type.toString(list.get(index, traversal)));
@@ -105,12 +130,15 @@ public class ListEditorPanel<T> extends JPanel {
     }
 
     @FunctionalInterface private interface Action { void run() throws Exception; }
+    
     private void execute(Action action) {
         try {
             action.run();
             blocks.updateStatus(list.getSize(), list.getNodeCount());
-            visualizer.revalidate(); visualizer.repaint();
+            visualizer.revalidate(); 
+            visualizer.repaint();
+        } catch (Exception ex) { 
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE); 
         }
-        catch (Exception ex) { JOptionPane.showMessageDialog(this, ex.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE); }
     }
 }
