@@ -1,0 +1,39 @@
+@startuml
+
+skinparam linetype ortho
+title Диаграмма 4 — Стратегии сортировки и обхода
+
+interface SortStrategyInterface {
+  ~strategyName(): String
+  ~sort(list, comparator)
+  ~sort(list, type)
+}
+
+class MergeSortStrategy
+class QuickSortStrategy
+
+interface TraverseStrategyInterface {
+  ~elementIndex(logicalIndex, size): int
+  ~insertionIndex(logicalIndex, size): int
+  ~logicalIndex(physicalIndex, size): int
+  ~traverse(list, callback)
+}
+
+class LinearTraverseStrategy
+class ReverseTraverseStrategy
+
+interface ForEachCallbackInterface
+class CustomList
+
+MergeSortStrategy ..|> SortStrategyInterface
+QuickSortStrategy ..|> SortStrategyInterface
+
+LinearTraverseStrategy ..|> TraverseStrategyInterface
+LinearTraverseStrategy ..> CustomList
+LinearTraverseStrategy ..> ForEachCallbackInterface
+
+ReverseTraverseStrategy ..|> TraverseStrategyInterface
+ReverseTraverseStrategy ..> CustomList
+ReverseTraverseStrategy ..> ForEachCallbackInterface
+
+@enduml

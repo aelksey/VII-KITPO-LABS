@@ -1,0 +1,47 @@
+@startuml
+skinparam linetype ortho
+title Диаграмма 5 — Стратегии пользовательских типов
+
+interface UserTypeInterface {
+  ~typeName(): String
+  ~create(): T
+  ~clone(object: T): T
+  ~compare(o1: T, o2: T): int
+  ~sampleValues(): List<T>
+  ~serializeValue(object: T): String
+  ~deserializeValue(value: String): T
+}
+
+class DoubleStrategy
+class IntegerStrategy
+class StringStrategy
+class Point2DStrategy
+
+class Point2D {
+  -x: double
+  -y: double
+  --
+  +getX(): double
+  +getY(): double
+  +getDistance(): double
+}
+
+class TestDataGenerator {
+  --
+  +{static} generateRandomList(type, maxListSize, maxBlockCapacity, randomCapacity): CustomList<T>
+}
+
+class CustomList
+
+DoubleStrategy ..|> UserTypeInterface
+IntegerStrategy ..|> UserTypeInterface
+StringStrategy ..|> UserTypeInterface
+Point2DStrategy ..|> UserTypeInterface
+Point2DStrategy ..> Point2D
+
+TestDataGenerator ..> UserTypeInterface
+TestDataGenerator ..> CustomList
+
+UserTypeInterface o--[hidden] TestDataGenerator
+
+@enduml

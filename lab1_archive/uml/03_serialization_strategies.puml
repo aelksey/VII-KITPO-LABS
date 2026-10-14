@@ -1,0 +1,47 @@
+@startuml
+
+skinparam linetype ortho
+title Диаграмма 3 — Стратегии сериализации
+
+interface SerializeStrategyInterface {
+  ~fileExtension(): String
+  ~formatName(): String
+  ~save(filename, list, userType)
+  ~load(filename, list, userType)
+}
+
+class BinarySerializeStrategy
+class JsonSerializeStrategy
+class PlainTxtSerializeStrategy
+
+class JsonStrings {
+  --
+  ~{static} quote(value: String): String
+  ~{static} parse(text: String): List<String>
+}
+
+class Parser {
+  -text: String
+  -position: int
+  --
+  ~parse(): List<String>
+}
+
+class CustomList
+interface UserTypeInterface
+
+BinarySerializeStrategy ..|> SerializeStrategyInterface
+BinarySerializeStrategy ..> CustomList
+BinarySerializeStrategy ..> UserTypeInterface
+
+JsonSerializeStrategy ..|> SerializeStrategyInterface
+JsonSerializeStrategy ..> CustomList
+JsonSerializeStrategy ..> UserTypeInterface
+JsonSerializeStrategy ..> JsonStrings
+
+PlainTxtSerializeStrategy ..|> SerializeStrategyInterface
+PlainTxtSerializeStrategy ..> CustomList
+PlainTxtSerializeStrategy ..> UserTypeInterface
+
+JsonStrings ..> Parser
+@enduml

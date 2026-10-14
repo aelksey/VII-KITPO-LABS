@@ -1,0 +1,37 @@
+package factory;
+
+import java.util.ArrayList;
+import java.util.List;
+import inface.UserTypeInterface;
+import types.*;
+
+// Фабрика типов
+public class UserFactory {
+    private static final List<UserTypeInterface<?>> builders = new ArrayList<>();
+
+    static {
+        // Регистрация типов данных
+        builders.add(new Point2DStrategy());
+        builders.add(new IntegerStrategy());
+        builders.add(new DoubleStrategy());
+        builders.add(new StringStrategy());
+    }
+
+    public static List<String> getTypeNameList() {
+        List<String> names = new ArrayList<>();
+        for (UserTypeInterface<?> b : builders) {
+            names.add(b.typeName());
+        }
+        return names;
+    }
+
+    public static UserTypeInterface<?> getBuilderByName(String name) {
+        for (UserTypeInterface<?> b : builders) {
+            if (b.typeName().equals(name)) {
+                return b;
+            }
+        }
+        throw new IllegalArgumentException("Тип не найден: " + name);
+    }
+}
+
