@@ -1,19 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:orientation="vertical"
+    android:padding="10dp">
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Выпадающие списки выбора конфигурации -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Тип данных:"/>
+            <Spinner android:id="@+id/spinner_type" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Обход итератора:" android:layout_marginTop="5dp"/>
+            <Spinner android:id="@+id/spinner_traverse" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Сериализация (Формат):" android:layout_marginTop="5dp"/>
+            <Spinner android:id="@+id/spinner_format" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+            <!-- Поля ввода для операций -->
+            <EditText android:id="@+id/et_value" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Значение элемента" android:inputType="text" android:layout_marginTop="10dp"/>
+            <EditText android:id="@+id/et_index" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Логический номер" android:inputType="number" android:text="0"/>
+
+            <!-- Сетка стандартных операций со структурой -->
+            <GridLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:columnCount="3" android:layout_marginTop="5dp">
+                <Button android:id="@+id/btn_append" android:text="В конец" android:textSize="12sp"/>
+                <Button android:id="@+id/btn_prepend" android:text="В начало" android:textSize="12sp"/>
+                <Button android:id="@+id/btn_insert" android:text="По номеру" android:textSize="12sp"/>
+                <Button android:id="@+id/btn_get" android:text="Получить" android:textSize="12sp"/>
+                <Button android:id="@+id/btn_remove" android:text="Удалить" android:textSize="12sp"/>
+                <Button android:id="@+id/btn_clear" android:text="Очистить" android:textSize="12sp"/>
+            </GridLayout>
+
+            <!-- Управление итератором -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Управление итератором:" android:textStyle="bold" android:layout_marginTop="10dp"/>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                <Button android:id="@+id/btn_iter_begin" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="|&lt;" android:textSize="11sp"/>
+                <Button android:id="@+id/btn_iter_prev" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="&lt;" android:textSize="11sp"/>
+                <Button android:id="@+id/btn_iter_next" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="&gt;" android:textSize="11sp"/>
+                <Button android:id="@+id/btn_iter_end" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="&gt;|" android:textSize="11sp"/>
+            </LinearLayout>
+
+            <!-- Группировка ячеек (BlockSettingsPanel) -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="10dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Ячеек в узле: "/>
+                <EditText android:id="@+id/et_capacity" android:layout_width="50dp" android:layout_height="wrap_content" android:inputType="number" android:text="4" android:gravity="center"/>
+                <Button android:id="@+id/btn_regroup" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Перегруппировать" android:textSize="11sp" android:layout_marginStart="5dp"/>
+            </LinearLayout>
+
+            <!-- ВОССТАНОВЛЕНО: Генерация случайного списка (RandomListPanel) -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="5dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Макс. элементов: "/>
+                <EditText android:id="@+id/et_random_max" android:layout_width="60dp" android:layout_height="wrap_content" android:inputType="number" android:text="10" android:gravity="center"/>
+                <Button android:id="@+id/btn_random_generate" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Случайный список" android:textSize="11sp" android:layout_marginStart="5dp"/>
+            </LinearLayout>
+
+            <!-- Файловые операции (SerializationPanel) -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="5dp">
+                <Button android:id="@+id/btn_save" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Сохранить файл" android:textSize="12sp"/>
+                <Button android:id="@+id/btn_load" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Открыть файл" android:textSize="12sp"/>
+            </LinearLayout>
+
+            <!-- Статус заполненности структуры данных -->
+            <TextView android:id="@+id/tv_status" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Объектов: 0   Узлов-массивов: 0" android:textStyle="italic" android:layout_marginTop="5dp" android:textColor="#555555"/>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Скролл-контейнер -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="280dp"
+        android:layout_marginTop="5dp"
+        android:background="#CCCCCC"
+        android:padding="2dp">
+
+        <ImageView
+            android:id="@+id/iv_list_render"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#FFFFFF"
+            android:scaleType="matrix" /> <!-- "matrix" критически важен для свободного зума и перемещения -->
+    </FrameLayout>
+
+    <!-- Текстовый вывод (Бывший JTextArea консоли) -->
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:id="@+id/tv_output"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:background="#EEEEEE"
+        android:padding="5dp"
+        android:scrollbars="vertical"
+        android:hint="Консоль вывода ответов структуры..."
+        android:textColor="#222222"
+        android:layout_marginTop="5dp"/>
+</LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
